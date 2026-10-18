@@ -10,12 +10,44 @@ import { MENU, buildWhatsAppUrl, EMPTY_ORDER, ORDER_STORAGE_KEY, addProduct, cha
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Delicias la casa del pastel — Pasteles hojaldrados caseros" },
-      { name: "description", content: "Pasteles hojaldrados dulces y salados hechos en casa. Encarga por WhatsApp y pasa a recoger." },
+      { title: "Delicias La Casa del Pastel | Pastelería artesanal" },
+      {
+        name: "description",
+        content: "Descubre nuestros pasteles hojaldrados dulces y salados, hechos en casa. Haz tu encargo por WhatsApp y pasa a recoger."
+      },
+      { name: "robots", content: "index, follow" },
       { property: "og:type", content: "website" },
+      { property: "og:locale", content: "es_CO" },
+      { property: "og:site_name", content: "Delicias La Casa del Pastel" },
+      {
+        property: "og:title",
+        content: "Delicias La Casa del Pastel | Pastelería artesanal"
+      },
+      {
+        property: "og:description",
+        content: "Pasteles hojaldrados dulces y salados, hechos en casa. Encarga por WhatsApp y pasa a recoger."
+      },
+      {
+        property: "og:url",
+        content: "https://deliciaslacasadelpastel.lovable.app/"
+      },
+      {
+        property: "og:image",
+        content: "https://raw.githubusercontent.com/AArteaga81/deliciaslacasadelpastel-assets/main/delicias_og_1200x630_82kB.jpg"
+      },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:title", content: "Delicias la casa del pastel" },
-      { property: "og:description", content: "Pasteles hojaldrados recién horneados. Encarga por WhatsApp y pasa a recoger." },
+      {
+        name: "twitter:title",
+        content: "Delicias La Casa del Pastel | Pastelería artesanal"
+      },
+      {
+        name: "twitter:description",
+        content: "Pasteles hojaldrados dulces y salados, hechos en casa. Encarga por WhatsApp."
+      },
+      {
+        name: "twitter:image",
+        content: "https://raw.githubusercontent.com/AArteaga81/deliciaslacasadelpastel-assets/main/delicias_og_1200x630_82kB.jpg"
+      }    
     ],
   }),
   component: Index,
