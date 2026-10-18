@@ -199,7 +199,7 @@ function OrderForm({ o, setO, saved }: { o: Order; setO: React.Dispatch<React.Se
                   {saved && <p role="status" className="mt-2 text-sm text-muted-foreground">Tu pedido se guarda automáticamente en este dispositivo.</p>}
                 </>
               )}
-              {err.items && o.items.length === 0 && <p role="alert" className="mt-1 text-sm font-semibold text-accent">Agrega al menos un producto a tu pedido</p>}
+              {err["items"] && o.items.length === 0 && <p role="alert" className="mt-1 text-sm font-semibold text-accent">Agrega al menos un producto a tu pedido</p>}
             </div>
             <label className="block font-semibold">Fecha y hora para recoger
               <input className={`mt-1 ${field("fecha")}`} placeholder="Ej.: sábado 22, 9:00 am" value={o.fecha} onChange={set("fecha")} />

@@ -40,7 +40,7 @@ export function changeQuantity(items: OrderItem[], nombre: string, delta: number
 export function removeProduct(items: OrderItem[], nombre: string): OrderItem[] {
   return items.filter(i => i.nombre !== nombre);
 }
-export function validateOrder(o: Order): Record<string, boolean> {
+export function validateOrder(o: Order): { nombre: boolean; items: boolean; fecha: boolean } {
   return { nombre: !o.nombre.trim(), items: o.items.length === 0, fecha: !o.fecha.trim() };
 }
 export function restoreOrder(raw: string | null): Order {
@@ -48,16 +48,16 @@ export function restoreOrder(raw: string | null): Order {
     const parsed: unknown = JSON.parse(raw ?? "null");
     if (!parsed || typeof parsed !== "object") return EMPTY_ORDER;
     const value = parsed as Record<string, unknown>;
-    let items: OrderItem[] = [];
-    if (Array.isArray(value.items)) {
-      for (const item of value.items) {
+    const items: OrderItem[] = [];
+    if (Array.isArray(value["items"])) {
+      for (const item of value["items"]) {
         if (!item || typeof item !== "object" || typeof item.nombre !== "string" || !MENU.some(p => p.nombre === item.nombre) || !Number.isSafeInteger(item.cantidad) || item.cantidad < 1) continue;
         const existing = items.find(i => i.nombre === item.nombre);
         if (existing) existing.cantidad += item.cantidad;
         else items.push({ nombre: item.nombre, cantidad: item.cantidad });
       }
     }
-    return { items, nombre: typeof value.nombre === "string" ? value.nombre : "", fecha: typeof value.fecha === "string" ? value.fecha : "", notas: typeof value.notas === "string" ? value.notas : "" };
+    return { items, nombre: typeof value["nombre"] === "string" ? value["nombre"] : "", fecha: typeof value["fecha"] === "string" ? value["fecha"] : "", notas: typeof value["notas"] === "string" ? value["notas"] : "" };
   } catch { return EMPTY_ORDER; }
 }
 export function buildWhatsAppUrl(o: Order): string {

@@ -26,7 +26,7 @@ describe("Multi-product orders", () => {
   });
   it("calculates subtotals and total with dotted thousands", () => {
     const items = [{ nombre: "Palito de queso", cantidad: 3 }, { nombre: "Pastel de arequipe", cantidad: 2 }];
-    expect(itemSubtotal(items[0])).toBe(9000);
+    expect(itemSubtotal({ nombre: "Palito de queso", cantidad: 3 })).toBe(9000);
     expect(orderTotal(items)).toBe(11000);
     expect(formatPrice(orderTotal(items))).toBe("$11.000");
   });
