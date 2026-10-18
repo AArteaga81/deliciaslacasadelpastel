@@ -25,7 +25,7 @@ export const Route = createFileRoute("/")({
       },
       {
         property: "og:description",
-        content: "Pasteles hojaldrados dulces y salados, hechos en casa. Encarga por WhatsApp y pasa a recoger."
+        content: "Pasteles hojaldrados dulces y salados. Encarga por WhatsApp y pasa a recoger."
       },
       {
         property: "og:url",
