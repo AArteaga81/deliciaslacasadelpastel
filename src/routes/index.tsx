@@ -310,6 +310,7 @@ function OrderForm({ o, setO, saved }: { o: Order; setO: React.Dispatch<React.Se
             </label>
             <Button type="submit" className={`${btnGold} h-auto w-full whitespace-normal py-4 text-lg`}>Enviar mi encargo por WhatsApp</Button>
           </form>
+          )}
         </div>
       </div>
     </section>
