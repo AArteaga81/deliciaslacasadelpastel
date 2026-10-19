@@ -5,7 +5,9 @@ import portada from "@/assets/portada.png.asset.json";
 import pasteles from "@/assets/pasteles.png.asset.json";
 import menuImg from "@/assets/menu.webp.asset.json";
 import whatsapp from "@/assets/whatsapp.jpg.asset.json";
-import { MENU, buildWhatsAppUrl, EMPTY_ORDER, ORDER_STORAGE_KEY, addProduct, changeQuantity, removeProduct, itemSubtotal, orderTotal, formatPrice, restoreOrder, validateOrder, type Order } from "@/lib/order";
+import { MENU, buildWhatsAppUrl, EMPTY_ORDER, ORDER_STORAGE_KEY, addProduct, changeQuantity, removeProduct, itemSubtotal, orderTotal, formatPrice, restoreOrder, validateOrder, LAST_ORDER_KEY, snapshotOrder, parseLastOrder, lastOrderToItems, shortSendDate, type Order, type LastOrder } from "@/lib/order";
+import { compartirSitio, showToast } from "@/lib/share";
+import { ShareIcon, Toast, InstallBanner } from "@/components/site-extras";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -47,8 +49,9 @@ export const Route = createFileRoute("/")({
       {
         name: "twitter:image",
         content: "https://raw.githubusercontent.com/AArteaga81/deliciaslacasadelpastel-assets/main/delicias_og_1200x630_82kB.jpg"
-      }    
+      }
     ],
+    links: [{ rel: "canonical", href: "https://deliciaslacasadelpastel.lovable.app/" }],
   }),
   component: Index,
 });
@@ -236,6 +239,22 @@ function OrderForm({ o, setO, saved }: { o: Order; setO: React.Dispatch<React.Se
         <div>
           <h2 className="text-3xl font-bold">Encarga el tuyo</h2>
           <p className="mt-2 text-muted-foreground">Llena los datos y tu pedido nos llega directo al WhatsApp. Te confirmamos en seguida.</p>
+          {sent ? (
+            <div role="status" className="mt-6 space-y-4 rounded-3xl bg-secondary/60 p-5 text-center sm:p-6">
+              <span aria-hidden="true" className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary text-2xl text-primary-foreground">✓</span>
+              <h3 className="text-2xl font-bold">¡Listo! Tu encargo ya está en nuestro WhatsApp 🎉</h3>
+              <p className="font-bold">Tu pedido: {sent.units} {sent.units === 1 ? "producto" : "productos"} • {formatPrice(sent.total)}</p>
+              <p className="text-muted-foreground">Te confirmamos en seguida. Recuerda: para confirmar tu encargo, 50% de anticipo por Nequi al mismo número.</p>
+              <a href={sent.url} target="_blank" rel="noopener" className={`${btnGold} w-full`}>Abrir WhatsApp de nuevo</a>
+              <div className="space-y-2 border-t border-border pt-4">
+                <p className="text-sm text-muted-foreground">Comparte Delicias con tus vecinos</p>
+                <button type="button" onClick={compartirSitio} className="inline-flex items-center gap-2 rounded-full border-2 border-accent px-4 py-2 text-sm font-bold text-accent">
+                  <ShareIcon className="h-4 w-4" /> Compartir
+                </button>
+              </div>
+              <button type="button" onClick={() => { setSent(null); setErr({}); }} className="text-sm font-semibold underline underline-offset-4">Hacer otro pedido</button>
+            </div>
+          ) : (
           <form onSubmit={submit} noValidate className="mt-6 space-y-4 rounded-3xl bg-secondary/60 p-5 sm:p-6">
             <label className="block font-semibold">Nombre
               <input className={`mt-1 ${field("nombre")}`} value={o.nombre} onChange={set("nombre")} />
@@ -247,6 +266,13 @@ function OrderForm({ o, setO, saved }: { o: Order; setO: React.Dispatch<React.Se
                 <div className="mt-2 space-y-3">
                   <p className="text-muted-foreground">Aún no has agregado productos. Elige tus favoritos del menú.</p>
                   <Button asChild className={`${btnGold} h-auto`}><a href="#menu">Ver el menú</a></Button>
+                  {lastItems.length > 0 && (
+                    <div className="rounded-2xl border border-border bg-card p-4">
+                      <p className="font-display text-lg font-bold">Repetir pedido anterior</p>
+                      <p className="text-sm text-muted-foreground">{lastUnits} {lastUnits === 1 ? "producto" : "productos"} • {formatPrice(orderTotal(lastItems))}{lastDate && ` • del ${lastDate}`}</p>
+                      <Button type="button" onClick={repeat} className={`${btnGold} mt-3 h-auto py-2`}>Repetir pedido</Button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <>
