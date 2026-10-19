@@ -92,10 +92,10 @@ function Index() {
     <div className={`min-h-screen bg-background text-foreground ${o.items.length ? "pb-[calc(4.5rem+env(safe-area-inset-bottom))]" : ""}`}>
       <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
         <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3">
-          <H1>
+         
           <span className="truncate font-display text-lg font-bold sm:text-xl">Delicias</span>
           <span className="truncate font-display text-lg font-bold sm:text-xl">La Casa del Pastel</span>
-            </>
+           
           <a href="#encargo" className={`${btnGold} px-4 py-2 text-sm`}>Encargar ahora</a>
         </div>
       </header>
