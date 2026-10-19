@@ -169,6 +169,11 @@ function Index() {
           <p>Para confirmar tu encargo: 50% de anticipo por Nequi al mismo número.</p>
           <p>Los precios pueden variar según personalización.</p>
           <p>Contacto: <a className="underline" href="mailto:deliciaslacasadelpastel@gmail.com">deliciaslacasadelpastel@gmail.com</a></p>
+          <p className="pt-2">
+            <button type="button" onClick={compartirSitio} className="inline-flex items-center gap-2 font-semibold underline-offset-4 hover:underline">
+              <ShareIcon className="h-4 w-4" /> Comparte esta página con tus vecinos
+            </button>
+          </p>
           <p>©2026</p>
         </div>
       </footer>
@@ -177,12 +182,20 @@ function Index() {
           <a href="#encargo">Tu pedido · {units} {units === 1 ? "producto" : "productos"} · {formatPrice(orderTotal(o.items))}</a>
         </Button>
       )}
+      <Toast raised={o.items.length > 0} />
     </div>
   );
 }
 
+type Sent = { url: string; units: number; total: number };
+
 function OrderForm({ o, setO, saved }: { o: Order; setO: React.Dispatch<React.SetStateAction<Order>>; saved: boolean }) {
   const [err, setErr] = useState<Record<string, boolean>>({});
+  const [sent, setSent] = useState<Sent | null>(null);
+  const [last, setLast] = useState<LastOrder | null>(null);
+  useEffect(() => {
+    try { setLast(parseLastOrder(localStorage.getItem(LAST_ORDER_KEY))); } catch { /* Storage disabled. */ }
+  }, []);
   const set = (k: "nombre" | "fecha" | "notas") => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setO(current => ({ ...current, [k]: e.target.value }));
 
   const submit = (e: React.FormEvent) => {
@@ -190,8 +203,25 @@ function OrderForm({ o, setO, saved }: { o: Order; setO: React.Dispatch<React.Se
     const n = validateOrder(o);
     setErr(n);
     if (Object.values(n).some(Boolean)) return;
-    window.open(buildWhatsAppUrl(o), "_blank", "noopener");
+    const url = buildWhatsAppUrl(o);
+    const snap = snapshotOrder(o.items);
+    try { localStorage.setItem(LAST_ORDER_KEY, JSON.stringify(snap)); } catch { /* Storage disabled. */ }
+    setLast(snap);
+    window.open(url, "_blank", "noopener");
+    setSent({ url, units: o.items.reduce((s, i) => s + i.cantidad, 0), total: orderTotal(o.items) });
+    setO(EMPTY_ORDER);
+    document.getElementById("encargo")?.scrollIntoView({ behavior: "smooth" });
   };
+  const repeat = () => {
+    if (!last) return;
+    const items = lastOrderToItems(last);
+    if (!items.length) return;
+    setO(current => ({ ...current, items }));
+    showToast("Pedido anterior cargado: ajústalo como quieras");
+  };
+  const lastItems = last ? lastOrderToItems(last) : [];
+  const lastUnits = lastItems.reduce((s, i) => s + i.cantidad, 0);
+  const lastDate = last ? shortSendDate(last.fechaEnvio) : "";
 
   const field = (k: string) => `w-full rounded-2xl border-2 bg-card px-4 py-3 outline-none focus:border-primary ${err[k] ? "border-accent" : "border-input"}`;
   const Err = ({ k }: { k: string }) => err[k] ? <p className="mt-1 text-sm font-semibold text-accent">Este dato es necesario</p> : null;
