@@ -93,9 +93,10 @@ function Index() {
       <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
         <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3">
          
-          <span className="truncate font-display text-lg font-bold sm:text-xl">Delicias</span>
-          <span className="truncate font-display text-lg font-bold sm:text-xl">La Casa del Pastel</span>
-           
+          <span className="truncate font-display text-lg font-bold sm:text-xl">Delicias
+            <br>La Casa del Pastel</br>
+          </span>
+                   
           <a href="#encargo" className={`${btnGold} px-4 py-2 text-sm`}>Encargar ahora</a>
         </div>
       </header>
