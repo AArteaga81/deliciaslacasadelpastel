@@ -72,3 +72,28 @@ export function buildWhatsAppUrl(o: Order): string {
   ];
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
 }
+
+export const LAST_ORDER_KEY = "delicias_ultimo_pedido";
+export type LastOrder = { items: { nombre: string; precioUnitario: number; cantidad: number }[]; fechaEnvio: string };
+export function snapshotOrder(items: OrderItem[], now = new Date()): LastOrder {
+  return {
+    items: items.map(i => ({ nombre: i.nombre, precioUnitario: MENU.find(p => p.nombre === i.nombre)?.precio ?? 0, cantidad: i.cantidad })),
+    fechaEnvio: now.toISOString(),
+  };
+}
+export function parseLastOrder(raw: string | null): LastOrder | null {
+  try {
+    const v = JSON.parse(raw ?? "null") as LastOrder | null;
+    if (!v || !Array.isArray(v.items) || !v.items.length) return null;
+    return v;
+  } catch { return null; }
+}
+/** Rebuilds order items from a snapshot using current menu prices; drops products no longer on the menu. */
+export function lastOrderToItems(last: LastOrder): OrderItem[] {
+  return restoreOrder(JSON.stringify({ items: last.items.map(i => ({ nombre: i.nombre, cantidad: i.cantidad })) })).items;
+}
+export function shortSendDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString("es-CO", { weekday: "long", day: "numeric" }).replace(",", "");
+}

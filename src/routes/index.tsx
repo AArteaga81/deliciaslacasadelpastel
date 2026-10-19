@@ -5,7 +5,9 @@ import portada from "@/assets/portada.png.asset.json";
 import pasteles from "@/assets/pasteles.png.asset.json";
 import menuImg from "@/assets/menu.webp.asset.json";
 import whatsapp from "@/assets/whatsapp.jpg.asset.json";
-import { MENU, buildWhatsAppUrl, EMPTY_ORDER, ORDER_STORAGE_KEY, addProduct, changeQuantity, removeProduct, itemSubtotal, orderTotal, formatPrice, restoreOrder, validateOrder, type Order } from "@/lib/order";
+import { MENU, buildWhatsAppUrl, EMPTY_ORDER, ORDER_STORAGE_KEY, addProduct, changeQuantity, removeProduct, itemSubtotal, orderTotal, formatPrice, restoreOrder, validateOrder, LAST_ORDER_KEY, snapshotOrder, parseLastOrder, lastOrderToItems, shortSendDate, type Order, type LastOrder } from "@/lib/order";
+import { compartirSitio, showToast } from "@/lib/share";
+import { ShareIcon, Toast, InstallBanner } from "@/components/site-extras";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -47,8 +49,9 @@ export const Route = createFileRoute("/")({
       {
         name: "twitter:image",
         content: "https://raw.githubusercontent.com/AArteaga81/deliciaslacasadelpastel-assets/main/delicias_og_1200x630_82kB.jpg"
-      }    
+      }
     ],
+    links: [{ rel: "canonical", href: "https://deliciaslacasadelpastel.lovable.app/" }],
   }),
   component: Index,
 });
@@ -91,14 +94,22 @@ function Index() {
   return (
     <div className={`min-h-screen bg-background text-foreground ${o.items.length ? "pb-[calc(4.5rem+env(safe-area-inset-bottom))]" : ""}`}>
       <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
-        <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3">
-         
-          <span className="truncate font-display text-lg font-bold sm:text-xl">Delicias La Casa del Pastel
+        <div className="mx-auto flex max-w-5xl items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
+          <img src="/isotipo.png" width={36} height={36} alt="Isotipo Delicias la Casa del Pastel" fetchPriority="high" loading="eager" className="hidden h-[30px] w-[30px] shrink-0 rounded-lg min-[360px]:block sm:h-9 sm:w-9" />
+          <span className="min-w-0 flex-1 font-display">
+            <span className="hidden whitespace-nowrap text-xl font-bold sm:inline">Delicias La Casa del Pastel</span>
+            <span className="flex flex-col leading-tight sm:hidden">
+              <span className="text-[18px] font-bold text-foreground">Delicias</span>
+              <span className="text-[12px] text-accent">La Casa del Pastel</span>
+            </span>
           </span>
-                   
-          <a href="#encargo" className={`${btnGold} px-4 py-2 text-sm`}>Encargar ahora</a>
+          <button type="button" onClick={compartirSitio} aria-label="Compartir el sitio" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-foreground transition hover:bg-secondary">
+            <ShareIcon />
+          </button>
+          <a href="#encargo" className={`${btnGold} shrink-0 whitespace-nowrap px-3 py-2 text-xs sm:px-4 sm:text-sm`}>Encargar<span className="hidden sm:inline">&nbsp;ahora</span></a>
         </div>
       </header>
+      <InstallBanner />
 
       <section className="relative">
         <img src={portada.url} alt="Mesa con pasteles hojaldrados" className="absolute inset-0 h-full w-full object-cover" />
@@ -161,6 +172,11 @@ function Index() {
           <p>Para confirmar tu encargo: 50% de anticipo por Nequi al mismo número.</p>
           <p>Los precios pueden variar según personalización.</p>
           <p>Contacto: <a className="underline" href="mailto:deliciaslacasadelpastel@gmail.com">deliciaslacasadelpastel@gmail.com</a></p>
+          <p className="pt-2">
+            <button type="button" onClick={compartirSitio} className="inline-flex items-center gap-2 font-semibold underline-offset-4 hover:underline">
+              <ShareIcon className="h-4 w-4" /> Comparte esta página con tus vecinos
+            </button>
+          </p>
           <p>©2026</p>
         </div>
       </footer>
@@ -169,12 +185,20 @@ function Index() {
           <a href="#encargo">Tu pedido · {units} {units === 1 ? "producto" : "productos"} · {formatPrice(orderTotal(o.items))}</a>
         </Button>
       )}
+      <Toast raised={o.items.length > 0} />
     </div>
   );
 }
 
+type Sent = { url: string; units: number; total: number };
+
 function OrderForm({ o, setO, saved }: { o: Order; setO: React.Dispatch<React.SetStateAction<Order>>; saved: boolean }) {
   const [err, setErr] = useState<Record<string, boolean>>({});
+  const [sent, setSent] = useState<Sent | null>(null);
+  const [last, setLast] = useState<LastOrder | null>(null);
+  useEffect(() => {
+    try { setLast(parseLastOrder(localStorage.getItem(LAST_ORDER_KEY))); } catch { /* Storage disabled. */ }
+  }, []);
   const set = (k: "nombre" | "fecha" | "notas") => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => setO(current => ({ ...current, [k]: e.target.value }));
 
   const submit = (e: React.FormEvent) => {
@@ -182,8 +206,25 @@ function OrderForm({ o, setO, saved }: { o: Order; setO: React.Dispatch<React.Se
     const n = validateOrder(o);
     setErr(n);
     if (Object.values(n).some(Boolean)) return;
-    window.open(buildWhatsAppUrl(o), "_blank", "noopener");
+    const url = buildWhatsAppUrl(o);
+    const snap = snapshotOrder(o.items);
+    try { localStorage.setItem(LAST_ORDER_KEY, JSON.stringify(snap)); } catch { /* Storage disabled. */ }
+    setLast(snap);
+    window.open(url, "_blank", "noopener");
+    setSent({ url, units: o.items.reduce((s, i) => s + i.cantidad, 0), total: orderTotal(o.items) });
+    setO(EMPTY_ORDER);
+    document.getElementById("encargo")?.scrollIntoView({ behavior: "smooth" });
   };
+  const repeat = () => {
+    if (!last) return;
+    const items = lastOrderToItems(last);
+    if (!items.length) return;
+    setO(current => ({ ...current, items }));
+    showToast("Pedido anterior cargado: ajústalo como quieras");
+  };
+  const lastItems = last ? lastOrderToItems(last) : [];
+  const lastUnits = lastItems.reduce((s, i) => s + i.cantidad, 0);
+  const lastDate = last ? shortSendDate(last.fechaEnvio) : "";
 
   const field = (k: string) => `w-full rounded-2xl border-2 bg-card px-4 py-3 outline-none focus:border-primary ${err[k] ? "border-accent" : "border-input"}`;
   const Err = ({ k }: { k: string }) => err[k] ? <p className="mt-1 text-sm font-semibold text-accent">Este dato es necesario</p> : null;
@@ -198,6 +239,22 @@ function OrderForm({ o, setO, saved }: { o: Order; setO: React.Dispatch<React.Se
         <div>
           <h2 className="text-3xl font-bold">Encarga el tuyo</h2>
           <p className="mt-2 text-muted-foreground">Llena los datos y tu pedido nos llega directo al WhatsApp. Te confirmamos en seguida.</p>
+          {sent ? (
+            <div role="status" className="mt-6 space-y-4 rounded-3xl bg-secondary/60 p-5 text-center sm:p-6">
+              <span aria-hidden="true" className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-primary text-2xl text-primary-foreground">✓</span>
+              <h3 className="text-2xl font-bold">¡Listo! Tu encargo ya está en nuestro WhatsApp 🎉</h3>
+              <p className="font-bold">Tu pedido: {sent.units} {sent.units === 1 ? "producto" : "productos"} • {formatPrice(sent.total)}</p>
+              <p className="text-muted-foreground">Te confirmamos en seguida. Recuerda: para confirmar tu encargo, 50% de anticipo por Nequi al mismo número.</p>
+              <a href={sent.url} target="_blank" rel="noopener" className={`${btnGold} w-full`}>Abrir WhatsApp de nuevo</a>
+              <div className="space-y-2 border-t border-border pt-4">
+                <p className="text-sm text-muted-foreground">Comparte Delicias con tus vecinos</p>
+                <button type="button" onClick={compartirSitio} className="inline-flex items-center gap-2 rounded-full border-2 border-accent px-4 py-2 text-sm font-bold text-accent">
+                  <ShareIcon className="h-4 w-4" /> Compartir
+                </button>
+              </div>
+              <button type="button" onClick={() => { setSent(null); setErr({}); }} className="text-sm font-semibold underline underline-offset-4">Hacer otro pedido</button>
+            </div>
+          ) : (
           <form onSubmit={submit} noValidate className="mt-6 space-y-4 rounded-3xl bg-secondary/60 p-5 sm:p-6">
             <label className="block font-semibold">Nombre
               <input className={`mt-1 ${field("nombre")}`} value={o.nombre} onChange={set("nombre")} />
@@ -209,6 +266,13 @@ function OrderForm({ o, setO, saved }: { o: Order; setO: React.Dispatch<React.Se
                 <div className="mt-2 space-y-3">
                   <p className="text-muted-foreground">Aún no has agregado productos. Elige tus favoritos del menú.</p>
                   <Button asChild className={`${btnGold} h-auto`}><a href="#menu">Ver el menú</a></Button>
+                  {lastItems.length > 0 && (
+                    <div className="rounded-2xl border border-border bg-card p-4">
+                      <p className="font-display text-lg font-bold">Repetir pedido anterior</p>
+                      <p className="text-sm text-muted-foreground">{lastUnits} {lastUnits === 1 ? "producto" : "productos"} • {formatPrice(orderTotal(lastItems))}{lastDate && ` • del ${lastDate}`}</p>
+                      <Button type="button" onClick={repeat} className={`${btnGold} mt-3 h-auto py-2`}>Repetir pedido</Button>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <>
@@ -246,6 +310,7 @@ function OrderForm({ o, setO, saved }: { o: Order; setO: React.Dispatch<React.Se
             </label>
             <Button type="submit" className={`${btnGold} h-auto w-full whitespace-normal py-4 text-lg`}>Enviar mi encargo por WhatsApp</Button>
           </form>
+          )}
         </div>
       </div>
     </section>
