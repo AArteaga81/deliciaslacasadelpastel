@@ -91,14 +91,22 @@ function Index() {
   return (
     <div className={`min-h-screen bg-background text-foreground ${o.items.length ? "pb-[calc(4.5rem+env(safe-area-inset-bottom))]" : ""}`}>
       <header className="sticky top-0 z-20 border-b border-border bg-background/90 backdrop-blur">
-        <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3">
-         
-          <span className="truncate font-display text-lg font-bold sm:text-xl">Delicias La Casa del Pastel
+        <div className="mx-auto flex max-w-5xl items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
+          <img src="/isotipo.png" width={36} height={36} alt="Isotipo Delicias la Casa del Pastel" fetchPriority="high" loading="eager" className="hidden h-[30px] w-[30px] shrink-0 rounded-lg min-[360px]:block sm:h-9 sm:w-9" />
+          <span className="min-w-0 flex-1 font-display">
+            <span className="hidden whitespace-nowrap text-xl font-bold sm:inline">Delicias La Casa del Pastel</span>
+            <span className="flex flex-col leading-tight sm:hidden">
+              <span className="text-[18px] font-bold text-foreground">Delicias</span>
+              <span className="text-[12px] text-accent">La Casa del Pastel</span>
+            </span>
           </span>
-                   
-          <a href="#encargo" className={`${btnGold} px-4 py-2 text-sm`}>Encargar ahora</a>
+          <button type="button" onClick={compartirSitio} aria-label="Compartir el sitio" className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-foreground transition hover:bg-secondary">
+            <ShareIcon />
+          </button>
+          <a href="#encargo" className={`${btnGold} shrink-0 whitespace-nowrap px-3 py-2 text-xs sm:px-4 sm:text-sm`}>Encargar<span className="hidden sm:inline">&nbsp;ahora</span></a>
         </div>
       </header>
+      <InstallBanner />
 
       <section className="relative">
         <img src={portada.url} alt="Mesa con pasteles hojaldrados" className="absolute inset-0 h-full w-full object-cover" />
