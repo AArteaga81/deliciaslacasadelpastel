@@ -166,7 +166,8 @@ function Index() {
 
       <footer className="bg-primary px-4 py-10 text-center text-primary-foreground">
         <div className="mx-auto max-w-2xl space-y-1 text-sm leading-relaxed">
-          <p className="font-display text-lg font-bold">Delicias la Casa del Pastel —{"\u00a0"}{"\n"}Hecho en casa, recién horneado.</p>
+          <p className="font-display text-lg font-bold">Delicias la Casa del Pastel —{"\u00a0"}{"\n"}.</p>
+          <p className="font-display text-lg font-bold">Hecho en casa, recién horneado.</p>          
           <p>Encarga por WhatsApp: +57 319 244 1139·{"\u00a0"}{"\n"}Pasa y recoge.</p>
           <p>Pedidos con 24 a 48 horas de anticipación.</p>
           <p>Para confirmar tu encargo: 50% de anticipo por Nequi al mismo número.</p>
