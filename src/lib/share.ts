@@ -6,7 +6,7 @@ export function showToast(message: string) {
 
 /** Single share entry point: native share sheet when available, otherwise copy the link. */
 export async function compartirSitio() {
-  const url = window.location.href.split("#")[0];
+  const url = window.location.origin + window.location.pathname;
   if (typeof navigator.share === "function") {
     try {
       await navigator.share({
